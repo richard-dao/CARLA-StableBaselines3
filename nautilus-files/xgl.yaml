@@ -1,0 +1,104 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: rqdao-pod-xgl
+spec:
+  hostname: xgl
+  containers:
+  - name: xgl
+    image: ghcr.io/selkies-project/nvidia-glx-desktop:latest
+    env:
+    - name: TZ
+      value: "UTC"
+    - name: SIZEW
+      value: "1920"
+    - name: SIZEH
+      value: "1080"
+    - name: REFRESH
+      value: "60"
+    - name: DPI
+      value: "96"
+    - name: CDEPTH
+      value: "24"
+    - name: VIDEO_PORT
+      value: "DP-0"
+    - name: PASSWD
+      valueFrom:
+        secretKeyRef:
+          name: rqdao-pass
+          key: rqdao-password
+    - name: WEBRTC_ENCODER
+      value: "nvh264enc"
+    - name: WEBRTC_ENABLE_RESIZE
+      value: "false"
+    - name: ENABLE_BASIC_AUTH
+      value: "true"
+    - name: TURN_HOST
+      value: "turn.nrp-nautilus.io"
+    - name: TURN_PORT
+      value: "3478"
+    - name: TURN_SHARED_SECRET
+      valueFrom:
+        secretKeyRef:
+          name: rqdao-pass
+          key: rqdao-turn-secret 
+
+    - name: TURN_USERNAME
+      value: "rqdao"
+    - name: TURN_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: rqdao-turn-shared-secret
+          key: rqdao-turn-shared
+    - name: TURN_PROTOCOL
+      value: "udp"
+    - name: TURN_TLS
+      value: "false"
+    stdin: true
+    tty: true
+    ports:
+    - name: http
+      containerPort: 8080
+      protocol: TCP
+    resources:
+      limits:
+        memory: 32Gi
+        cpu: "16"
+        nvidia.com/gpu: 2
+        ephemeral-storage: 512Gi
+      requests:
+        memory: 32Gi
+        cpu: "16"
+        nvidia.com/gpu: 2
+        ephemeral-storage: 512Gi
+    volumeMounts:
+    - mountPath: /dev/shm
+      name: dshm
+    - mountPath: /cache
+      name: xgl-cache-vol 
+    - mountPath: /mnt/persistent
+      name: xgl-root-vol 
+  dnsPolicy: None
+  dnsConfig:
+    nameservers:
+    - 8.8.8.8
+    - 8.8.4.4
+  volumes:
+  - name: dshm
+    emptyDir:
+      medium: Memory
+  - name: xgl-cache-vol
+    persistentVolumeClaim:
+      claimName: rqdao-xgl-cache
+  - name: xgl-root-vol
+    persistentVolumeClaim:
+      claimName: rqdao-seaweed-volume
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: nautilus.io/vis
+            operator: NotIn
+            values:
+            - suncave
