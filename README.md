@@ -328,7 +328,7 @@ The papers we read on DQN described the architecture as 3 entities. The
 Q-Network, the Target Network, and the Experience Relay.
 
 ![ Our diagram of the DQN training loop.\
-**Source:** Our Slideshow ](DQN.png){width="3in"}
+**Source:** Our Slideshow ](DQN.png)
 
 The Q-Network, also known as the agent, is trained to produce the
 optimal state-action value. Originally, the architecutre used the
